@@ -10,6 +10,8 @@ import Base: abs, abs2, clamp, convert, copy, div, eps, isfinite, isinf,
     promote_op, promote_rule, zero, trunc, floor, round, ceil, bswap,
     mod, rem, atan2, hypot, max, min, varm, real, histrange
 
+export mapc
+
 # The unaryOps
 import Base:      conj, sin, cos, tan, sinh, cosh, tanh,
                   asin, acos, atan, asinh, acosh, atanh,
@@ -40,6 +42,12 @@ typealias MathTypes{T,C} Union{AbstractRGB{T},TransparentRGB{C,T},AbstractGray{T
 ## Generic algorithms
 mapreduce(f, op::Base.ShortCircuiting, a::MathTypes) = f(a)  # ambiguity
 mapreduce(f, op, a::MathTypes) = f(a)
+
+# Mapping a function over color channels
+mapc{C<:AbstractGray}(f, c::C) = base_colorant_type(C)(f(gray(c)))
+mapc{C<:AbstractRGB }(f, c::C) = base_colorant_type(C)(f(red(c)), f(green(c)), f(blue(c)))
+mapc{C<:TransparentGray}(f, c::C) = base_colorant_type(C)(f(gray(c)), f(alpha(c)))
+mapc{C<:TransparentRGB }(f, c::C) = base_colorant_type(C)(f(red(c)), f(green(c)), f(blue(c)), f(alpha(c)))
 
 for f in (:trunc, :floor, :round, :ceil, :eps, :bswap)
     @eval $f{T}(g::Gray{T}) = Gray{T}($f(gray(g)))

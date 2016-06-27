@@ -256,6 +256,15 @@ facts("Colortypes") do
         a = RGBA{U8}[RGBA(1,0,0,0.8), RGBA(0.7,0.8,0,0.9)]
         @fact sum(a) --> RGBA(u8sum(1,0.7),0.8,0,u8sum(0.8,0.9))
     end
+
+    context("mapc") do
+        @fact mapc(sqrt, Gray{U8}(0.04)) --> Gray(sqrt(U8(0.04)))
+        @fact mapc(sqrt, AGray{U8}(0.04, 0.4)) --> AGray(sqrt(U8(0.04)), sqrt(U8(0.4)))
+        @fact mapc(sqrt, GrayA{U8}(0.04, 0.4)) --> GrayA(sqrt(U8(0.04)), sqrt(U8(0.4)))
+        @fact mapc(x->2x, RGB{U8}(0.04, 0.2, 0.3)) --> RGB(map(x->2*U8(x), (0.04,0.2,0.3))...)
+        @fact mapc(sqrt, RGBA{U8}(0.04, 0.2, 0.3, 0.7)) --> RGBA(map(x->sqrt(U8(x)), (0.04, 0.2, 0.3, 0.7))...)
+        @fact mapc(x->1.5f0x, RGBA{U8}(0.04, 0.2, 0.3, 0.4)) --> RGBA(map(x->1.5f0*U8(x), (0.04, 0.2, 0.3, 0.4))...)
+    end
 end
 
 isinteractive() || FactCheck.exitstatus()
