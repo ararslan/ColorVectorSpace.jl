@@ -6,7 +6,7 @@ macro test_colortype_approx_eq(a, b)
     :(test_colortype_approx_eq($(esc(a)), $(esc(b)), $(string(a)), $(string(b))))
 end
 
-u8sum(x,y) = Float64(UFixed8(x)) + Float64(UFixed8(y))
+u8sum(x,y) = Float64(N0f8(x)) + Float64(N0f8(y))
 
 FactCheck.roughly(x::Gray) = (y::Gray) -> isapprox(y, x)
 FactCheck.roughly(x::RGB) = (y::RGB) -> isapprox(y, x)
@@ -52,10 +52,10 @@ facts("Colortypes") do
         @fact abs2(ccmp) --> 0.2f0^2
         @fact norm(cf) --> 0.1f0
         @fact sumabs2(ccmp) --> 0.2f0^2
-        cu = Gray{U8}(0.1)
+        cu = Gray{N0f8}(0.1)
         @fact 2*cu --> Gray(2*cu.val)
         @fact 2.0f0*cu --> Gray(2.0f0*cu.val)
-        f = U8(0.5)
+        f = N0f8(0.5)
         @fact (f*cu).val --> roughly(f*cu.val)
         @fact 2.*cf --> ccmp
         @fact cf.*2 --> ccmp
@@ -73,9 +73,9 @@ facts("Colortypes") do
         @fact Gray(Inf) --> isinf
         @fact Gray(Inf) --> not(isnan)
         @fact abs(Gray(0.1)) --> roughly(0.1)
-        @fact eps(Gray{U8}) --> Gray(eps(U8))  # #282
+        @fact eps(Gray{N0f8}) --> Gray(eps(N0f8))  # #282
 
-        acu = Gray{U8}[cu]
+        acu = Gray{N0f8}[cu]
         acf = Gray{Float32}[cf]
         @fact +acu --> exactly(acu)
         @fact @inferred(acu./trues(1)) --> acu
@@ -88,16 +88,16 @@ facts("Colortypes") do
         @fact typeof(acu-acf) --> Vector{Gray{Float32}}
         @fact typeof(acu.+acf) --> Vector{Gray{Float32}}
         @fact typeof(acu.-acf) --> Vector{Gray{Float32}}
-        @fact typeof(acu+cf) --> Vector{Gray{U8}}
-        @fact typeof(acu-cf) --> Vector{Gray{U8}}
-        @fact typeof(acu.+cf) --> Vector{Gray{U8}}
-        @fact typeof(acu.-cf) --> Vector{Gray{U8}}
+        @fact typeof(acu+cf) --> Vector{Gray{N0f8}}
+        @fact typeof(acu-cf) --> Vector{Gray{N0f8}}
+        @fact typeof(acu.+cf) --> Vector{Gray{N0f8}}
+        @fact typeof(acu.-cf) --> Vector{Gray{N0f8}}
         @fact typeof(2*acf) --> Vector{Gray{Float32}}
         @fact typeof(2.*acf) --> Vector{Gray{Float32}}
         @fact typeof(0x02*acu) --> Vector{Gray{Float32}}
-        @fact typeof(acu/2) --> Vector{Gray{typeof(U8(0.5)/2)}}
+        @fact typeof(acu/2) --> Vector{Gray{typeof(N0f8(0.5)/2)}}
         @fact typeof(acf.^2) --> Vector{Gray{Float32}}
-        @fact (acu/Gray{U8}(0.5))[1] --> gray(acu[1])/U8(0.5)
+        @fact (acu/Gray{N0f8}(0.5))[1] --> gray(acu[1])/N0f8(0.5)
         @fact (acf/Gray{Float32}(2))[1] --> roughly(0.05f0)
         @fact (acu/2)[1] --> Gray(gray(acu[1])/2)
         @fact (acf/2)[1] --> roughly(Gray{Float32}(0.05f0))
@@ -105,21 +105,21 @@ facts("Colortypes") do
 
         @fact gray(0.8) --> 0.8
 
-        a = Gray{U8}[0.8,0.7]
+        a = Gray{N0f8}[0.8,0.7]
         @fact sum(a) --> Gray(u8sum(0.8,0.7))
         @fact abs( var(a) - (a[1]-a[2])^2 / 2 ) --> less_than(0.001)
         @fact isapprox(a, a) --> true
         @fact real(Gray{Float32}) <: Real --> true
         @fact zero(ColorTypes.Gray)-->0
         @fact one(ColorTypes.Gray)-->1
-        a = Gray{U8}[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        a = Gray{N0f8}[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
         @fact histrange(a,10)-->0.1:0.1:1
 
     end
 
     context("Comparisons with Gray") do
-        g1 = Gray{U8}(0.2)
-        g2 = Gray{U8}(0.3)
+        g1 = Gray{N0f8}(0.2)
+        g2 = Gray{N0f8}(0.3)
         @fact isless(g1, g2) --> true
         @fact isless(g2, g1) --> false
         @fact g1 < g2 --> true
@@ -142,7 +142,7 @@ facts("Colortypes") do
     end
 
     context("Unary operations with Gray") do
-        for g in (Gray(0.4), Gray{U8}(0.4))
+        for g in (Gray(0.4), Gray{N0f8}(0.4))
             for op in ColorVectorSpace.unaryOps
                 try
                     v = @eval $op(gray(g))  # if this fails, don't bother
@@ -150,7 +150,7 @@ facts("Colortypes") do
                 end
             end
         end
-        u = U8(0.4)
+        u = N0f8(0.4)
         @fact ~Gray(u) --> Gray(~u)
         @fact -Gray(u) --> Gray(-u)
     end
@@ -174,7 +174,7 @@ facts("Colortypes") do
         @test_colortype_approx_eq ([p1]/2)[1] GrayA{Float32}(Gray(0.4),0.1)
         @test_colortype_approx_eq (0.4f0*[p1]+0.6f0*[p2])[1] GrayA{Float32}(Gray(0.68),0.26)
 
-        a = GrayA{U8}[GrayA(0.8,0.7), GrayA(0.5,0.2)]
+        a = GrayA{N0f8}[GrayA(0.8,0.7), GrayA(0.5,0.2)]
         @fact sum(a) --> GrayA(u8sum(0.8,0.5), u8sum(0.7,0.2))
         @fact isapprox(a, a) --> true
         a = AGray{Float64}(1.0, 0.9999999999999999)
@@ -197,10 +197,10 @@ facts("Colortypes") do
         @fact ccmp/2 --> cf
         @fact 2.0f0*cf --> ccmp
         @fact eltype(2.0*cf) --> Float64
-        cu = RGB{U8}(0.1,0.2,0.3)
+        cu = RGB{N0f8}(0.1,0.2,0.3)
         @test_colortype_approx_eq 2*cu RGB(2*cu.r, 2*cu.g, 2*cu.b)
         @test_colortype_approx_eq 2.0f0*cu RGB(2.0f0*cu.r, 2.0f0*cu.g, 2.0f0*cu.b)
-        f = U8(0.5)
+        f = N0f8(0.5)
         @fact (f*cu).r --> roughly(f*cu.r)
         @fact 2.*cf --> ccmp
         @fact cf.*2 --> ccmp
@@ -226,24 +226,24 @@ facts("Colortypes") do
         @fact sumabs2(RGB(0.1,0.2,0.3)) --> roughly(0.14)
         @fact norm(RGB(0.1,0.2,0.3)) --> roughly(sqrt(0.14))
 
-        acu = RGB{U8}[cu]
+        acu = RGB{N0f8}[cu]
         acf = RGB{Float32}[cf]
         @fact typeof(acu+acf) --> Vector{RGB{Float32}}
         @fact typeof(acu-acf) --> Vector{RGB{Float32}}
         @fact typeof(acu.+acf) --> Vector{RGB{Float32}}
         @fact typeof(acu.-acf) --> Vector{RGB{Float32}}
-        @fact typeof(acu+cf) --> Vector{RGB{U8}}
-        @fact typeof(acu-cf) --> Vector{RGB{U8}}
-        @fact typeof(acu.+cf) --> Vector{RGB{U8}}
-        @fact typeof(acu.-cf) --> Vector{RGB{U8}}
+        @fact typeof(acu+cf) --> Vector{RGB{N0f8}}
+        @fact typeof(acu-cf) --> Vector{RGB{N0f8}}
+        @fact typeof(acu.+cf) --> Vector{RGB{N0f8}}
+        @fact typeof(acu.-cf) --> Vector{RGB{N0f8}}
         @fact typeof(2*acf) --> Vector{RGB{Float32}}
         @fact typeof(convert(UInt8, 2)*acu) --> Vector{RGB{Float32}}
-        @fact typeof(acu/2) --> Vector{RGB{typeof(U8(0.5)/2)}}
-        rcu = rand(RGB{U8}, 3, 5)
+        @fact typeof(acu/2) --> Vector{RGB{typeof(N0f8(0.5)/2)}}
+        rcu = rand(RGB{N0f8}, 3, 5)
         @fact @inferred(rcu./trues(3, 5)) --> rcu
         @fact typeof(rcu./trues(3, 5)) --> Matrix{typeof(cu/true)}
 
-        a = RGB{U8}[RGB(1,0,0), RGB(1,0.8,0)]
+        a = RGB{N0f8}[RGB(1,0,0), RGB(1,0.8,0)]
         @fact sum(a) --> RGB(2.0,0.8,0)
         @fact isapprox(a, a) --> true
         a = RGB{Float64}(1.0, 1.0, 0.9999999999999999)
@@ -265,10 +265,10 @@ facts("Colortypes") do
         @fact ccmp/2 --> cf
         @fact 2.0f0*cf --> ccmp
         @fact eltype(2.0*cf) --> Float64
-        cu = RGBA{U8}(0.1,0.2,0.3,0.4)
+        cu = RGBA{N0f8}(0.1,0.2,0.3,0.4)
         @test_colortype_approx_eq 2*cu RGBA(2*cu.r, 2*cu.g, 2*cu.b, 2*cu.alpha)
         @test_colortype_approx_eq 2.0f0*cu RGBA(2.0f0*cu.r, 2.0f0*cu.g, 2.0f0*cu.b, 2.0f0*cu.alpha)
-        f = U8(0.5)
+        f = N0f8(0.5)
         @fact (f*cu).r --> roughly(f*cu.r)
         @fact 2.*cf --> ccmp
         @fact cf.*2 --> ccmp
@@ -297,21 +297,21 @@ facts("Colortypes") do
         @fact RGBA(0.2, 1, 0.5, Inf) --> not(isnan)
         @fact abs(RGBA(0.1,0.2,0.3,0.2)) --> roughly(0.8)
 
-        acu = RGBA{U8}[cu]
+        acu = RGBA{N0f8}[cu]
         acf = RGBA{Float32}[cf]
         @fact typeof(acu+acf) --> Vector{RGBA{Float32}}
         @fact typeof(acu-acf) --> Vector{RGBA{Float32}}
         @fact typeof(acu.+acf) --> Vector{RGBA{Float32}}
         @fact typeof(acu.-acf) --> Vector{RGBA{Float32}}
-        @fact typeof(acu+cf) --> Vector{RGBA{U8}}
-        @fact typeof(acu-cf) --> Vector{RGBA{U8}}
-        @fact typeof(acu.+cf) --> Vector{RGBA{U8}}
-        @fact typeof(acu.-cf) --> Vector{RGBA{U8}}
+        @fact typeof(acu+cf) --> Vector{RGBA{N0f8}}
+        @fact typeof(acu-cf) --> Vector{RGBA{N0f8}}
+        @fact typeof(acu.+cf) --> Vector{RGBA{N0f8}}
+        @fact typeof(acu.-cf) --> Vector{RGBA{N0f8}}
         @fact typeof(2*acf) --> Vector{RGBA{Float32}}
         @fact typeof(convert(UInt8, 2)*acu) --> Vector{RGBA{Float32}}
-        @fact typeof(acu/2) --> Vector{RGBA{typeof(U8(0.5)/2)}}
+        @fact typeof(acu/2) --> Vector{RGBA{typeof(N0f8(0.5)/2)}}
 
-        a = RGBA{U8}[RGBA(1,0,0,0.8), RGBA(0.7,0.8,0,0.9)]
+        a = RGBA{N0f8}[RGBA(1,0,0,0.8), RGBA(0.7,0.8,0,0.9)]
         @fact sum(a) --> RGBA(u8sum(1,0.7),0.8,0,u8sum(0.8,0.9))
         @fact isapprox(a, a) --> true
         a = ARGB{Float64}(1.0, 1.0, 1.0, 0.9999999999999999)
@@ -326,9 +326,9 @@ facts("Colortypes") do
     context("dotc") do
         @fact dotc(0.2, 0.2) --> 0.2^2
         @fact dotc(0.2, 0.3f0) --> 0.2*0.3f0
-        @fact dotc(U8(0.2), U8(0.3)) --> Float32(U8(0.2))*Float32(U8(0.3))
-        @fact dotc(Gray{U8}(0.2), Gray24(0.3)) --> Float32(U8(0.2))*Float32(U8(0.3))
-        xc, yc = RGB(0.2,0.2,0.2), RGB{U8}(0.3,0.3,0.3)
+        @fact dotc(N0f8(0.2), N0f8(0.3)) --> Float32(N0f8(0.2))*Float32(N0f8(0.3))
+        @fact dotc(Gray{N0f8}(0.2), Gray24(0.3)) --> Float32(N0f8(0.2))*Float32(N0f8(0.3))
+        xc, yc = RGB(0.2,0.2,0.2), RGB{N0f8}(0.3,0.3,0.3)
         @fact dotc(xc, yc) --> roughly(dotc(convert(Gray, xc), convert(Gray, yc)), 1e-6)
         @fact dotc(RGB(1,0,0), RGB(0,1,1)) --> 0
     end
